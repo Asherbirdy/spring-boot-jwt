@@ -39,10 +39,8 @@ public class AuthServiceImpl implements AuthService {
                                          HttpServletRequest request, HttpServletResponse response) {
         // 檢查 email 是否已被註冊
         Member existingMember = memberDao.getMemberByEmail(email);
-        System.out.println(existingMember +"test");
         if (existingMember != null) {
-            System.out.println("test2");
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, email + " 已經被使用！");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "EMAIL_ALREADY_USED");
         }
 
         // hash 密碼並建立會員
@@ -83,13 +81,13 @@ public class AuthServiceImpl implements AuthService {
         // 查詢會員
         Member member = memberDao.getMemberByEmail(email);
         if (member == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "錯誤帳號密碼");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "WRONG_EMAIL_OR_PASSWORD");
         }
 
         // 驗證密碼
         if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "錯誤帳號密碼");
-        }
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "WRONG_EMAIL_OR_PASSWORD");
+            }
 
         String memberId = member.getMemberId();
         String name = member.getName();
