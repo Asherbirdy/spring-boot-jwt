@@ -62,10 +62,10 @@ public class MySecurityConfig {
                 // 設定 api 的權限控制 (role 欄位值: "user", "vip", "movie_manager", "admin")
                 .authorizeHttpRequests(request -> request
                         // 註冊和登入不需要認證
-                        .requestMatchers("/register", "/login").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
 
                         // 登出和查詢目前使用者需要認證
-                        .requestMatchers("/logout", "/me").authenticated()
+                        .requestMatchers("/logout", "/me", "/member/**").authenticated()
 
                         .anyRequest().denyAll()
                 )
