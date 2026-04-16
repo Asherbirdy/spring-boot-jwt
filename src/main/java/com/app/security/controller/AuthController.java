@@ -33,8 +33,7 @@ public class AuthController {
         String email = registerRequest.getEmail();
         String password = registerRequest.getPassword();
 
-        if (name == null || email == null || password == null
-                || name.isBlank() || email.isBlank() || password.isBlank()) {
+        if (name == null || email == null || password == null || name.isBlank() || email.isBlank() || password.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "請提供名稱、信箱和密碼！");
         }
 

@@ -3,8 +3,10 @@ package com.app.security.security;
 import com.app.security.dao.MemberDao;
 import com.app.security.dao.TokenDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -60,6 +63,16 @@ public class MySecurityConfig {
                 )
 
                 // 設定 api 的權限控制 (role 欄位值: "user", "vip", "movie_manager", "admin")
+                // 未認證時回傳 JSON
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            new ObjectMapper().writeValue(response.getOutputStream(),
+                                    Map.of("status", 401, "error", "使用者未登入"));
+                        })
+                )
+
                 .authorizeHttpRequests(request -> request
                         // 註冊和登入不需要認證
                         .requestMatchers("/auth/**").permitAll()
