@@ -1,0 +1,166 @@
+package com.app.security.service.impl;
+
+import com.app.security.dao.MemberDao;
+import com.app.security.dao.TokenDao;
+import com.app.security.model.Member;
+import com.app.security.model.Token;
+import com.app.security.security.JwtUtil;
+import com.app.security.service.AuthService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+@Component
+public class AuthServiceImpl implements AuthService {
+
+    @Autowired
+    private MemberDao memberDao;
+
+    @Autowired
+    private TokenDao tokenDao;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Override
+    public Map<String, Object> register(String name, String email, String password,
+                                         HttpServletRequest request, HttpServletResponse response) {
+        // 檢查 email 是否已被註冊
+        Member existingMember = memberDao.getMemberByEmail(email);
+        System.out.println(existingMember +"test");
+        if (existingMember != null) {
+            System.out.println("test2");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, email + " 已經被使用！");
+        }
+
+        // hash 密碼並建立會員
+        String hashedPassword = passwordEncoder.encode(password);
+        Member member = new Member();
+        member.setName(name);
+        member.setEmail(email);
+        member.setPassword(hashedPassword);
+        member.setRole("user");
+
+        String memberId = memberDao.createMember(member);
+
+        // 建立 refresh token 並存入資料庫
+        String refreshTokenStr = UUID.randomUUID().toString();
+        Token token = new Token();
+        token.setRefreshToken(refreshTokenStr);
+        token.setIp(request.getRemoteAddr());
+        token.setUserAgent(request.getHeader("User-Agent"));
+        token.setIsValid(true);
+        token.setMemberId(memberId);
+        tokenDao.createToken(token);
+
+        // 產生 JWT 並設定 Cookie
+        attachCookieToResponse(response, memberId, name, email, "user", refreshTokenStr);
+
+        // 回傳使用者資訊
+        Map<String, Object> tokenUser = new HashMap<>();
+        tokenUser.put("name", name);
+        tokenUser.put("memberId", memberId);
+        tokenUser.put("role", "user");
+
+        return tokenUser;
+    }
+
+    @Override
+    public Map<String, Object> login(String email, String password,
+                                      HttpServletRequest request, HttpServletResponse response) {
+        // 查詢會員
+        Member member = memberDao.getMemberByEmail(email);
+        if (member == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "錯誤帳號密碼");
+        }
+
+        // 驗證密碼
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "錯誤帳號密碼");
+        }
+
+        String memberId = member.getMemberId();
+        String name = member.getName();
+        String role = member.getRole();
+
+        // 檢查是否有有效的 refresh token
+        String refreshTokenStr;
+        Token existingToken = tokenDao.getValidTokenByMemberId(memberId);
+
+        if (existingToken != null) {
+            refreshTokenStr = existingToken.getRefreshToken();
+        } else {
+            // 建立新的 refresh token
+            refreshTokenStr = UUID.randomUUID().toString();
+            Token token = new Token();
+            token.setRefreshToken(refreshTokenStr);
+            token.setIp(request.getRemoteAddr());
+            token.setUserAgent(request.getHeader("User-Agent"));
+            token.setIsValid(true);
+            token.setMemberId(memberId);
+            tokenDao.createToken(token);
+        }
+
+        // 產生 JWT 並設定 Cookie
+        attachCookieToResponse(response, memberId, name, email, role, refreshTokenStr);
+
+        // 回傳使用者資訊
+        Map<String, Object> tokenUser = new HashMap<>();
+        tokenUser.put("name", name);
+        tokenUser.put("memberId", memberId);
+        tokenUser.put("role", role);
+
+        return tokenUser;
+    }
+
+    @Override
+    public void logout(String memberId, HttpServletResponse response) {
+        // 刪除該使用者所有 token
+        tokenDao.deleteTokensByMemberId(memberId);
+
+        // 清除 Cookie
+        Cookie accessCookie = new Cookie("accessToken", "");
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0);
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie("refreshToken", "");
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
+    }
+
+    private void attachCookieToResponse(HttpServletResponse response, String memberId,
+                                         String name, String email, String role,
+                                         String refreshTokenStr) {
+        String accessTokenJwt = jwtUtil.createAccessToken(memberId, name, email, role);
+        String refreshTokenJwt = jwtUtil.createRefreshToken(memberId, email, refreshTokenStr);
+
+        Cookie accessCookie = new Cookie("accessToken", accessTokenJwt);
+        accessCookie.setHttpOnly(true);
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge((int) (jwtUtil.getAccessTokenExpirationMs() / 1000));
+
+        Cookie refreshCookie = new Cookie("refreshToken", refreshTokenJwt);
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge((int) (jwtUtil.getRefreshTokenExpirationMs() / 1000));
+
+        response.addCookie(accessCookie);
+        response.addCookie(refreshCookie);
+    }
+}
