@@ -35,8 +35,11 @@ public class AuthServiceImpl implements AuthService {
     private JwtUtil jwtUtil;
 
     @Override
-    public Map<String, Object> register(String name, String email, String password,
-                                         HttpServletRequest request, HttpServletResponse response) {
+    public Map<String, Object> register(String name,
+                                        String email,
+                                        String password,
+                                        HttpServletRequest request,
+                                        HttpServletResponse response) {
         // 檢查 email 是否已被註冊
         Member existingMember = memberDao.getMemberByEmail(email);
         if (existingMember != null) {
