@@ -54,14 +54,7 @@ public class AuthServiceImpl implements AuthService {
         String memberId = memberDao.createMember(member);
 
         // 建立 refresh token 並存入資料庫
-        String refreshTokenStr = UUID.randomUUID().toString();
-        Token token = new Token();
-        token.setRefreshToken(refreshTokenStr);
-        token.setIp(request.getRemoteAddr());
-        token.setUserAgent(request.getHeader("User-Agent"));
-        token.setIsValid(true);
-        token.setMemberId(memberId);
-        tokenDao.createToken(token);
+        String refreshTokenStr = createRefreshToken(request, memberId);
 
         // 產生 JWT 並設定 Cookie
         attachCookieToResponse(response, memberId, name, email, "user", refreshTokenStr);
@@ -101,14 +94,7 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenStr = existingToken.getRefreshToken();
         } else {
             // 建立新的 refresh token
-            refreshTokenStr = UUID.randomUUID().toString();
-            Token token = new Token();
-            token.setRefreshToken(refreshTokenStr);
-            token.setIp(request.getRemoteAddr());
-            token.setUserAgent(request.getHeader("User-Agent"));
-            token.setIsValid(true);
-            token.setMemberId(memberId);
-            tokenDao.createToken(token);
+            refreshTokenStr = createRefreshToken(request, memberId);
         }
 
         // 產生 JWT 並設定 Cookie
@@ -140,6 +126,18 @@ public class AuthServiceImpl implements AuthService {
         refreshCookie.setPath("/");
         refreshCookie.setMaxAge(0);
         response.addCookie(refreshCookie);
+    }
+
+    private String createRefreshToken(HttpServletRequest request, String memberId) {
+        String refreshTokenStr = UUID.randomUUID().toString();
+        Token token = new Token();
+        token.setRefreshToken(refreshTokenStr);
+        token.setIp(request.getRemoteAddr());
+        token.setUserAgent(request.getHeader("User-Agent"));
+        token.setIsValid(true);
+        token.setMemberId(memberId);
+        tokenDao.createToken(token);
+        return refreshTokenStr;
     }
 
     private void attachCookieToResponse(HttpServletResponse response, String memberId,
