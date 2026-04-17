@@ -33,9 +33,10 @@ public class TokenDaoImpl implements TokenDao {
 
         if (tokenList.isEmpty()) {
             return null;
-        } else {
-            return tokenList.get(0);
         }
+
+        return tokenList.get(0);
+
     }
 
     @Override
