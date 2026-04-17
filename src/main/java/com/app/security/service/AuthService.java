@@ -11,5 +11,5 @@ public interface AuthService {
 
     Map<String, Object> login(LoginRequest loginRequest);
 
-    void logout(String memberId);
+    void logout();
 }

@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -119,7 +121,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(String memberId) {
+    public void logout() {
+        String memberId = getCurrentMemberId();
         HttpServletResponse response = getCurrentResponse();
 
         // 刪除該使用者所有 token
@@ -149,6 +152,11 @@ public class AuthServiceImpl implements AuthService {
 
     private HttpServletResponse getCurrentResponse() {
         return getRequestAttributes().getResponse();
+    }
+
+    private String getCurrentMemberId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (String) authentication.getCredentials();
     }
 
     private String createRefreshToken(String memberId) {

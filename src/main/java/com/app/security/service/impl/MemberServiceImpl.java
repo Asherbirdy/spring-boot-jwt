@@ -5,6 +5,8 @@ import com.app.security.model.Member;
 import com.app.security.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,7 +20,9 @@ public class MemberServiceImpl implements MemberService {
     private MemberDao memberDao;
 
     @Override
-    public Map<String, Object> showMemberInfo(String memberId) {
+    public Map<String, Object> showMemberInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String memberId = (String) authentication.getCredentials();
         Member member = memberDao.getMemberById(memberId);
 
         if (member == null) {
