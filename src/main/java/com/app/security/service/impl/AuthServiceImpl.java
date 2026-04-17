@@ -2,6 +2,8 @@ package com.app.security.service.impl;
 
 import com.app.security.dao.MemberDao;
 import com.app.security.dao.TokenDao;
+import com.app.security.dto.AuthLoginResponse;
+import com.app.security.dto.AuthRegisterResponse;
 import com.app.security.dto.LoginRequest;
 import com.app.security.dto.RegisterRequest;
 import com.app.security.model.Member;
@@ -21,8 +23,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Component
@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private JwtUtil jwtUtil;
 
     @Override
-    public Map<String, Object> register(RegisterRequest registerRequest) {
+    public AuthRegisterResponse register(RegisterRequest registerRequest) {
         String name = registerRequest.getName();
         String email = registerRequest.getEmail();
         String password = registerRequest.getPassword();
@@ -68,17 +68,11 @@ public class AuthServiceImpl implements AuthService {
         // 產生 JWT 並設定 Cookie
         attachCookieToResponse(memberId, name, email, "user", refreshTokenStr);
 
-        // 回傳使用者資訊
-        Map<String, Object> tokenUser = new HashMap<>();
-        tokenUser.put("name", name);
-        tokenUser.put("memberId", memberId);
-        tokenUser.put("role", "user");
-
-        return tokenUser;
+        return new AuthRegisterResponse(name, memberId, "user");
     }
 
     @Override
-    public Map<String, Object> login(LoginRequest loginRequest) {
+    public AuthLoginResponse login(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
@@ -111,13 +105,7 @@ public class AuthServiceImpl implements AuthService {
         // 產生 JWT 並設定 Cookie
         attachCookieToResponse(memberId, name, email, role, refreshTokenStr);
 
-        // 回傳使用者資訊
-        Map<String, Object> tokenUser = new HashMap<>();
-        tokenUser.put("name", name);
-        tokenUser.put("memberId", memberId);
-        tokenUser.put("role", role);
-
-        return tokenUser;
+        return new AuthLoginResponse(name, memberId, role);
     }
 
     @Override

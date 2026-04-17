@@ -1,5 +1,6 @@
 package com.app.security.controller;
 
+import com.app.security.dto.MemberInfoResponse;
 import com.app.security.service.AuthService;
 import com.app.security.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,8 +24,8 @@ public class MemberController {
     private AuthService authService;
 
     @GetMapping("/showMe")
-    public ResponseEntity<Map<String, Object>> showMe() {
-        Map<String, Object> memberInfo = memberService.showMemberInfo();
+    public ResponseEntity<MemberInfoResponse> showMe() {
+        MemberInfoResponse memberInfo = memberService.showMemberInfo();
         return ResponseEntity.status(HttpStatus.OK).body(memberInfo);
     }
 

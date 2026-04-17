@@ -1,8 +1,8 @@
 package com.app.security.service;
 
-import java.util.Map;
+import com.app.security.dto.MemberInfoResponse;
 
 public interface MemberService {
 
-    Map<String, Object> showMemberInfo();
+    MemberInfoResponse showMemberInfo();
 }

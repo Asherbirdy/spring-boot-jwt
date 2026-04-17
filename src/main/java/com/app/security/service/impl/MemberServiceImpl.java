@@ -1,6 +1,7 @@
 package com.app.security.service.impl;
 
 import com.app.security.dao.MemberDao;
+import com.app.security.dto.MemberInfoResponse;
 import com.app.security.model.Member;
 import com.app.security.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +11,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Component
 public class MemberServiceImpl implements MemberService {
 
@@ -20,7 +18,7 @@ public class MemberServiceImpl implements MemberService {
     private MemberDao memberDao;
 
     @Override
-    public Map<String, Object> showMemberInfo() {
+    public MemberInfoResponse showMemberInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String memberId = (String) authentication.getCredentials();
         Member member = memberDao.getMemberById(memberId);
@@ -29,14 +27,13 @@ public class MemberServiceImpl implements MemberService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "NON_EXISTENT_MEMBER");
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("memberId", member.getMemberId());
-        result.put("name", member.getName());
-        result.put("email", member.getEmail());
-        result.put("role", member.getRole());
-        result.put("createdAt", member.getCreatedAt());
-        result.put("updatedAt", member.getUpdatedAt());
-
-        return result;
+        return new MemberInfoResponse(
+                member.getMemberId(),
+                member.getName(),
+                member.getEmail(),
+                member.getRole(),
+                member.getCreatedAt(),
+                member.getUpdatedAt()
+        );
     }
 }
