@@ -33,9 +33,10 @@ public class MemberDaoImpl implements MemberDao {
 
         if (memberList.isEmpty()) {
             return null;
-        } else {
-            return memberList.get(0);
         }
+
+        return memberList.get(0);
+
     }
 
     @Override
@@ -50,9 +51,10 @@ public class MemberDaoImpl implements MemberDao {
 
         if (memberList.isEmpty()) {
             return null;
-        } else {
-            return memberList.get(0);
         }
+
+        return memberList.get(0);
+
     }
 
     @Override
