@@ -34,7 +34,7 @@ public class AuthController {
         String password = registerRequest.getPassword();
 
         if (name == null || email == null || password == null || name.isBlank() || email.isBlank() || password.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "請提供名稱、信箱和密碼！");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "REGISTER_MISSING_FIELDS");
         }
 
         Map<String, Object> user = authService.register(name, email, password, request, response);
@@ -49,23 +49,10 @@ public class AuthController {
         String password = loginRequest.getPassword();
 
         if (email == null || password == null || email.isBlank() || password.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "請提供帳號和密碼！");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "LOGIN_MISSING_FIELDS");
         }
 
         Map<String, Object> user = authService.login(email, password, request, response);
-        return ResponseEntity.ok(user);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(Authentication authentication,
-                                                       HttpServletResponse response) {
-        if (authentication == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "使用者未登入");
-        }
-
-        String memberId = (String) authentication.getCredentials();
-        authService.logout(memberId, response);
-
-        return ResponseEntity.ok(Map.of("msg", "登出成功！"));
+        return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -66,10 +67,10 @@ public class MySecurityConfig {
                 // 未認證時回傳 JSON
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(401);
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             new ObjectMapper().writeValue(response.getOutputStream(),
-                                    Map.of("status", 401, "error", "使用者未登入"));
+                                    Map.of("status", 401, "error", "UNAUTHORIZED","requestUrl",request.getRequestURI()));
                         })
                 )
 
