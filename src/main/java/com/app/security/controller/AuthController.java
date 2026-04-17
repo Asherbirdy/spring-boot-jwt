@@ -3,8 +3,6 @@ package com.app.security.controller;
 import com.app.security.dto.LoginRequest;
 import com.app.security.dto.RegisterRequest;
 import com.app.security.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,24 +23,14 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest registerRequest,
-                                                         HttpServletRequest request,
-                                                         HttpServletResponse response) {
-        Map<String, Object> user = authService.register(registerRequest.getName(), 
-                                                        registerRequest.getEmail(),
-                                                        registerRequest.getPassword(), 
-                                                        request, 
-                                                        response);
+    public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        Map<String, Object> user = authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginRequest,
-                                                         HttpServletRequest request,
-                                                         HttpServletResponse response) {
-        Map<String, Object> user = authService.login(loginRequest.getEmail(), 
-                                                     loginRequest.getPassword(),
-                                                     request, response);
+    public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest loginRequest) {
+        Map<String, Object> user = authService.login(loginRequest);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 }

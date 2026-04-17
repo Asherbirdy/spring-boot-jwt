@@ -1,17 +1,15 @@
 package com.app.security.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.app.security.dto.LoginRequest;
+import com.app.security.dto.RegisterRequest;
 
 import java.util.Map;
 
 public interface AuthService {
 
-    Map<String, Object> register(String name, String email, String password,
-                                  HttpServletRequest request, HttpServletResponse response);
+    Map<String, Object> register(RegisterRequest registerRequest);
 
-    Map<String, Object> login(String email, String password,
-                               HttpServletRequest request, HttpServletResponse response);
+    Map<String, Object> login(LoginRequest loginRequest);
 
-    void logout(String memberId, HttpServletResponse response);
+    void logout(String memberId);
 }

@@ -2,6 +2,8 @@ package com.app.security.service.impl;
 
 import com.app.security.dao.MemberDao;
 import com.app.security.dao.TokenDao;
+import com.app.security.dto.LoginRequest;
+import com.app.security.dto.RegisterRequest;
 import com.app.security.model.Member;
 import com.app.security.model.Token;
 import com.app.security.security.JwtUtil;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
@@ -35,11 +39,11 @@ public class AuthServiceImpl implements AuthService {
     private JwtUtil jwtUtil;
 
     @Override
-    public Map<String, Object> register(String name,
-                                        String email,
-                                        String password,
-                                        HttpServletRequest request,
-                                        HttpServletResponse response) {
+    public Map<String, Object> register(RegisterRequest registerRequest) {
+        String name = registerRequest.getName();
+        String email = registerRequest.getEmail();
+        String password = registerRequest.getPassword();
+
         // 檢查 email 是否已被註冊
         Member existingMember = memberDao.getMemberByEmail(email);
         if (existingMember != null) {
@@ -57,10 +61,10 @@ public class AuthServiceImpl implements AuthService {
         String memberId = memberDao.createMember(member);
 
         // 建立 refresh token 並存入資料庫
-        String refreshTokenStr = createRefreshToken(request, memberId);
+        String refreshTokenStr = createRefreshToken(memberId);
 
         // 產生 JWT 並設定 Cookie
-        attachCookieToResponse(response, memberId, name, email, "user", refreshTokenStr);
+        attachCookieToResponse(memberId, name, email, "user", refreshTokenStr);
 
         // 回傳使用者資訊
         Map<String, Object> tokenUser = new HashMap<>();
@@ -72,8 +76,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Map<String, Object> login(String email, String password,
-                                      HttpServletRequest request, HttpServletResponse response) {
+    public Map<String, Object> login(LoginRequest loginRequest) {
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
+
         // 查詢會員
         Member member = memberDao.getMemberByEmail(email);
         if (member == null) {
@@ -82,8 +88,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 驗證密碼
         if (!passwordEncoder.matches(password, member.getPassword())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "WRONG_EMAIL_OR_PASSWORD");
-            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "WRONG_EMAIL_OR_PASSWORD");
+        }
 
         String memberId = member.getMemberId();
         String name = member.getName();
@@ -97,11 +103,11 @@ public class AuthServiceImpl implements AuthService {
             refreshTokenStr = existingToken.getRefreshToken();
         } else {
             // 建立新的 refresh token
-            refreshTokenStr = createRefreshToken(request, memberId);
+            refreshTokenStr = createRefreshToken(memberId);
         }
 
         // 產生 JWT 並設定 Cookie
-        attachCookieToResponse(response, memberId, name, email, role, refreshTokenStr);
+        attachCookieToResponse(memberId, name, email, role, refreshTokenStr);
 
         // 回傳使用者資訊
         Map<String, Object> tokenUser = new HashMap<>();
@@ -113,7 +119,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(String memberId, HttpServletResponse response) {
+    public void logout(String memberId) {
+        HttpServletResponse response = getCurrentResponse();
+
         // 刪除該使用者所有 token
         tokenDao.deleteTokensByMemberId(memberId);
 
@@ -131,7 +139,20 @@ public class AuthServiceImpl implements AuthService {
         response.addCookie(refreshCookie);
     }
 
-    private String createRefreshToken(HttpServletRequest request, String memberId) {
+    private ServletRequestAttributes getRequestAttributes() {
+        return (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    }
+
+    private HttpServletRequest getCurrentRequest() {
+        return getRequestAttributes().getRequest();
+    }
+
+    private HttpServletResponse getCurrentResponse() {
+        return getRequestAttributes().getResponse();
+    }
+
+    private String createRefreshToken(String memberId) {
+        HttpServletRequest request = getCurrentRequest();
         String refreshTokenStr = UUID.randomUUID().toString();
         Token token = new Token();
         token.setRefreshToken(refreshTokenStr);
@@ -143,9 +164,9 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenStr;
     }
 
-    private void attachCookieToResponse(HttpServletResponse response, String memberId,
-                                         String name, String email, String role,
-                                         String refreshTokenStr) {
+    private void attachCookieToResponse(String memberId, String name, String email,
+                                         String role, String refreshTokenStr) {
+        HttpServletResponse response = getCurrentResponse();
         String accessTokenJwt = jwtUtil.createAccessToken(memberId, name, email, role);
         String refreshTokenJwt = jwtUtil.createRefreshToken(memberId, email, refreshTokenStr);
 
