@@ -1,4 +1,4 @@
-package com.app.security.controller;
+package com.app.security.exception;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
