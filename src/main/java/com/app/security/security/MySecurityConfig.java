@@ -2,7 +2,6 @@ package com.app.security.security;
 
 import com.app.security.dao.MemberDao;
 import com.app.security.dao.TokenDao;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,14 +25,17 @@ import java.util.Map;
 @EnableWebSecurity
 public class MySecurityConfig {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private TokenDao tokenDao;
+    private final TokenDao tokenDao;
 
-    @Autowired
-    private MemberDao memberDao;
+    private final MemberDao memberDao;
+
+    public MySecurityConfig(JwtUtil jwtUtil, TokenDao tokenDao, MemberDao memberDao) {
+        this.jwtUtil = jwtUtil;
+        this.tokenDao = tokenDao;
+        this.memberDao = memberDao;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {

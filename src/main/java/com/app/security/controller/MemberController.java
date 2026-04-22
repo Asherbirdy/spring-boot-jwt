@@ -3,7 +3,6 @@ package com.app.security.controller;
 import com.app.security.dto.MemberInfoResponse;
 import com.app.security.service.AuthService;
 import com.app.security.service.MemberService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,11 +16,14 @@ import java.util.Map;
 @RequestMapping("/member")
 public class MemberController {
 
-    @Autowired
-    private MemberService memberService;
+    private final MemberService memberService;
 
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+
+    public MemberController(MemberService memberService, AuthService authService) {
+        this.memberService = memberService;
+        this.authService = authService;
+    }
 
     @GetMapping("/showMe")
     public ResponseEntity<MemberInfoResponse> showMe() {

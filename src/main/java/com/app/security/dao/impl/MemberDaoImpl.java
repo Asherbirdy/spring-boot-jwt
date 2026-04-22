@@ -3,7 +3,6 @@ package com.app.security.dao.impl;
 import com.app.security.dao.MemberDao;
 import com.app.security.model.Member;
 import com.app.security.rowmapper.MemberRowMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +14,14 @@ import java.util.UUID;
 @Component
 public class MemberDaoImpl implements MemberDao {
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    private MemberRowMapper memberRowMapper;
+    private final MemberRowMapper memberRowMapper;
+
+    public MemberDaoImpl(NamedParameterJdbcTemplate namedParameterJdbcTemplate, MemberRowMapper memberRowMapper) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.memberRowMapper = memberRowMapper;
+    }
 
     @Override
     public Member getMemberByEmail(String email) {

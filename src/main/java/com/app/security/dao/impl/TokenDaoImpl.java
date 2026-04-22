@@ -3,7 +3,6 @@ package com.app.security.dao.impl;
 import com.app.security.dao.TokenDao;
 import com.app.security.model.Token;
 import com.app.security.rowmapper.TokenRowMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -15,11 +14,14 @@ import java.util.UUID;
 @Component
 public class TokenDaoImpl implements TokenDao {
 
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
-    private TokenRowMapper tokenRowMapper;
+    private final TokenRowMapper tokenRowMapper;
+
+    public TokenDaoImpl(NamedParameterJdbcTemplate namedParameterJdbcTemplate, TokenRowMapper tokenRowMapper) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.tokenRowMapper = tokenRowMapper;
+    }
 
     @Override
     public Token getValidTokenByMemberId(String memberId) {
