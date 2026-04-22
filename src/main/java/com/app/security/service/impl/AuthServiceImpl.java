@@ -28,17 +28,21 @@ import java.util.UUID;
 @Component
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired
-    private MemberDao memberDao;
+    private final MemberDao memberDao;
+
+    private final TokenDao tokenDao;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    private TokenDao tokenDao;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private JwtUtil jwtUtil;
+    public AuthServiceImpl(MemberDao memberDao, TokenDao tokenDao, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this.memberDao = memberDao;
+        this.tokenDao = tokenDao;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     public AuthRegisterResponse register(RegisterRequest registerRequest) {
@@ -160,8 +164,7 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenStr;
     }
 
-    private void attachCookieToResponse(String memberId, String name, String email,
-                                         String role, String refreshTokenStr) {
+    private void attachCookieToResponse(String memberId, String name, String email, String role, String refreshTokenStr) {
         HttpServletResponse response = getCurrentResponse();
         String accessTokenJwt = jwtUtil.createAccessToken(memberId, name, email, role);
         String refreshTokenJwt = jwtUtil.createRefreshToken(memberId, email, refreshTokenStr);
